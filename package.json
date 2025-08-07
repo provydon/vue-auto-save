@@ -16,6 +16,14 @@
   "keywords": ["vue", "composable", "autosave", "form", "debounce", "vue3"],
   "author": "Providence Ifeosame",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/provydon/vue-auto-save.git"
+  },
+  "bugs": {
+    "url": "https://github.com/provydon/vue-auto-save/issues"
+  },
+  "homepage": "https://github.com/provydon/vue-auto-save#readme",
   "sideEffects": false,
   "publishConfig": { "access": "public" },
   "scripts": {
