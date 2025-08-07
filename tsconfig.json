@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+      "target": "ESNext",
+      "module": "ESNext",
+      "declaration": true,
+      "declarationDir": "dist",
+      "emitDeclarationOnly": true,
+      "outDir": "dist",
+      "moduleResolution": "Node",
+      "strict": true,
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true
+    },
+    "include": ["src"],
+    "exclude": ["test", "node_modules", "dist"]
+  }
+  

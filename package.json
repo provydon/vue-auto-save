@@ -1,0 +1,42 @@
+{
+  "name": "@provydon/vue-auto-save",
+  "version": "1.0.0",
+  "description": "A Vue 3 composable that autosaves forms with debounce, optional field skipping, and blockable watchers.",
+  "main": "./dist/useAutoSaveForm.cjs",
+  "module": "./dist/useAutoSaveForm.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/useAutoSaveForm.mjs",
+      "require": "./dist/useAutoSaveForm.cjs"
+    }
+  },
+  "files": ["dist"],
+  "keywords": ["vue", "composable", "autosave", "form", "debounce", "vue3"],
+  "author": "Providence Ifeosame",
+  "license": "MIT",
+  "sideEffects": false,
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "clean": "rm -rf dist",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "peerDependencies": {
+    "vue": "^3.0.0"
+  },
+  "devDependencies": {
+    "vue": "^3.5.18",
+    "typescript": "^5.9.2",
+    "vite": "^6.3.5",
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^3.2.4",
+    "@vue/test-utils": "^2.4.5",
+    "@vitest/coverage-v8": "^3.2.4",
+    "jsdom": "^25.0.1"
+  }
+}
