@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { reactive, nextTick } from 'vue';
 import { useAutoSaveForm } from '../src';
+import { ref } from 'vue';
 
 describe('useAutoSaveForm', () => {
   let mockOnSave: ReturnType<typeof vi.fn>;
@@ -196,6 +197,99 @@ describe('useAutoSaveForm', () => {
     expect(mockOnSave).toHaveBeenCalledTimes(1);
   });
 
+  it('should handle deeply nested object changes', async () => {
+    const form = reactive({ 
+      user: { 
+        profile: { 
+          personal: { 
+            name: 'John',
+            details: { age: 30, preferences: { theme: 'dark' } }
+          },
+          contact: { email: 'john@example.com' }
+        },
+        settings: { notifications: { email: true, push: false } }
+      },
+      metadata: { 
+        tags: ['user', 'active'],
+        permissions: { read: true, write: false, admin: false }
+      }
+    });
+    
+    const { isAutoSaving } = useAutoSaveForm(form, {
+      onSave: mockOnSave,
+      deep: true,
+      debounce: 100
+    });
+
+    form.user.profile.personal.name = 'Jane';
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(1);
+
+    form.user.profile.personal.details.preferences.theme = 'light';
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(2);
+
+    form.user.settings.notifications.push = true;
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(3);
+
+    form.metadata.permissions.admin = true;
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(4);
+  });
+
+  it('should handle array mutations in deeply nested objects', async () => {
+    const form = reactive({ 
+      categories: [
+        { 
+          id: 1, 
+          name: 'Electronics',
+          products: [
+            { id: 1, name: 'Phone', variants: [{ color: 'black', price: 999 }] }
+          ]
+        }
+      ]
+    });
+    
+    const { isAutoSaving } = useAutoSaveForm(form, {
+      onSave: mockOnSave,
+      deep: true,
+      debounce: 100
+    });
+
+    form.categories[0].products[0].variants.push({ color: 'white', price: 1099 });
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(1);
+
+    form.categories[0].products.push({ id: 2, name: 'Laptop', variants: [] });
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(2);
+  });
+
   it('should handle nested and array changes reactively', async () => {
     const form = reactive({ 
       user: { name: 'John', address: { city: 'NYC' } },
@@ -283,4 +377,171 @@ describe('useAutoSaveForm', () => {
 
     consoleSpy.mockRestore();
   });
+
+  it('should test deep reactivity with complex nested structures', async () => {
+    const form = reactive({ 
+      company: {
+        departments: [
+          {
+            id: 1,
+            name: 'Engineering',
+            teams: [
+              {
+                id: 1,
+                name: 'Frontend',
+                members: [
+                  { id: 1, name: 'Alice', skills: ['Vue', 'TypeScript'] }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    });
+    
+    const { isAutoSaving } = useAutoSaveForm(form, {
+      onSave: mockOnSave,
+      deep: true,
+      debounce: 100
+    });
+
+    form.company.departments[0].teams[0].members[0].skills.push('React');
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(1);
+
+    form.company.departments[0].teams[0].members[0].name = 'Alice Smith';
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(2);
+  });
+
+  it('should detect changes in deeply nested arrays with object mutations', async () => {
+    const form = reactive({ 
+      projects: [
+        {
+          id: 1,
+          tasks: [
+            {
+              id: 1,
+              subtasks: [
+                { id: 1, status: 'pending', assignee: { name: 'John', id: 1 } }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+    
+    const { isAutoSaving } = useAutoSaveForm(form, {
+      onSave: mockOnSave,
+      deep: true,
+      debounce: 100
+    });
+
+    form.projects[0].tasks[0].subtasks[0].status = 'in-progress';
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(1);
+
+    form.projects[0].tasks[0].subtasks[0].assignee.name = 'Jane';
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(2);
+  });
+
+  it('should handle deep object property additions and deletions', async () => {
+    const form = reactive({ 
+      user: { 
+        profile: { name: 'John' } as Record<string, any>
+      }
+    });
+    
+    const { isAutoSaving } = useAutoSaveForm(form, {
+      onSave: mockOnSave,
+      deep: true,
+      debounce: 100
+    });
+
+    form.user.profile.email = 'john@example.com';
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(1);
+
+    delete form.user.profile.email;
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(2);
+  });
+
+
+
+  it('should handle deep reactivity with mixed primitive and object types', async () => {
+    const form = reactive({ 
+      config: {
+        enabled: true,
+        settings: {
+          theme: 'dark',
+          features: {
+            autoSave: true,
+            notifications: false,
+            advanced: {
+              timeout: 5000,
+              retries: 3
+            }
+          }
+        }
+      }
+    });
+    
+    const { isAutoSaving } = useAutoSaveForm(form, {
+      onSave: mockOnSave,
+      deep: true,
+      debounce: 100
+    });
+
+    form.config.settings.features.advanced.timeout = 10000;
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(1);
+
+    form.config.settings.features.notifications = true;
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(2);
+
+    form.config.enabled = false;
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(3);
+  });
+
+
 }); 

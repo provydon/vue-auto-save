@@ -229,7 +229,7 @@ export function useAutoSaveForm(
   cancelDebounce = debounced.cancel;
 
   const stop = watch(
-    () => getWatchedForm(),
+    form,
     debouncedSave,
     {
       deep,
