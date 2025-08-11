@@ -543,5 +543,64 @@ describe('useAutoSaveForm', () => {
     expect(mockOnSave).toHaveBeenCalledTimes(3);
   });
 
+  it('should trigger immediate save when unblockWatcher is called with null', async () => {
+    const form = reactive({ name: 'John', email: 'john@example.com' });
+    const { isAutoSaving, unblockWatcher } = useAutoSaveForm(form, {
+      onSave: mockOnSave,
+      debounce: 1000
+    });
+
+    form.name = 'Jane';
+    await nextTick();
+
+    vi.advanceTimersByTime(500);
+    await nextTick();
+
+    expect(mockOnSave).not.toHaveBeenCalled();
+
+    unblockWatcher(null);
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(1);
+    expect(isAutoSaving.value).toBe(true);
+  });
+
+  it('should trigger immediate save when unblockWatcher is called with null even without form changes', async () => {
+    const form = reactive({ name: 'John', email: 'john@example.com' });
+    const { isAutoSaving, unblockWatcher } = useAutoSaveForm(form, {
+      onSave: mockOnSave,
+      debounce: 1000
+    });
+
+    unblockWatcher(null);
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(1);
+    expect(isAutoSaving.value).toBe(true);
+  });
+
+  it('should trigger immediate save when unblockWatcher is called with null after blocking', async () => {
+    const form = reactive({ name: 'John', email: 'john@example.com' });
+    const { isAutoSaving, blockWatcher, unblockWatcher } = useAutoSaveForm(form, {
+      onSave: mockOnSave,
+      debounce: 1000
+    });
+
+    blockWatcher(5000);
+
+    form.name = 'Jane';
+    await nextTick();
+
+    vi.advanceTimersByTime(1000);
+    await nextTick();
+
+    expect(mockOnSave).not.toHaveBeenCalled();
+
+    unblockWatcher(null);
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(1);
+    expect(isAutoSaving.value).toBe(true);
+  });
 
 }); 

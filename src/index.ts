@@ -152,6 +152,12 @@ export function useAutoSaveForm(
     cancelTempDebounce();
 
     if (ms === null) {
+      const current = getWatchedForm();
+      if (compare) {
+        previousObj = null;
+      } else {
+        previousSerialized = null;
+      }
       save();
     } else {
       const tempDebounced = debounceFn(save, ms);
