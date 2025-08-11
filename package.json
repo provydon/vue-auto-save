@@ -1,6 +1,6 @@
 {
   "name": "@provydon/vue-auto-save",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A Vue 3 composable that autosaves forms with debounce, optional field skipping, and blockable watchers.",
   "main": "./dist/useAutoSaveForm.cjs",
   "module": "./dist/useAutoSaveForm.mjs",
