@@ -1,4 +1,4 @@
-import { ref, watch, isRef, unref, onScopeDispose, type Ref } from 'vue';
+import { ref, watch, isRef, unref, onScopeDispose, nextTick, type Ref } from 'vue';
 
 export interface UseAutoSaveFormOptions {
   /**
@@ -278,15 +278,15 @@ export function useAutoSaveForm(
       blockWatcher(4000);
 
       Promise.resolve(onSave())
-        .then(() => {
+        .then(async () => {
           onAfterSave?.();
           if (debug) console.log('[AutoSave] Save successful.');
-          setTimeout(() => {
-            const currentAfterSave = getWatchedForm();
-            updateLastSavedState(currentAfterSave);
-            onSaveSuccess?.(currentAfterSave);
-            if (debug) console.log('[AutoSave] Tracked state updated.');
-          }, 1000);
+          await nextTick();
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const currentAfterSave = getWatchedForm();
+          updateLastSavedState(currentAfterSave);
+          onSaveSuccess?.(currentAfterSave);
+          if (debug) console.log('[AutoSave] Tracked state updated.');
         })
         .catch((err) => {
           onError?.(err);
