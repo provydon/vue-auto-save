@@ -252,19 +252,19 @@ export function useAutoSaveForm(
     const current = getWatchedForm();
 
     if (compare) {
-      if (previousObj && compare(previousObj, current)) return;
       if (trackLastSaved && lastSavedObj && compare(lastSavedObj, current)) {
         if (debug) console.log('[AutoSave] Skipping save - identical to last saved state');
         return;
       }
+      if (previousObj && compare(previousObj, current)) return;
       previousObj = current;
     } else {
       const currentSerialized = serialize(current);
-      if (previousSerialized !== null && currentSerialized === previousSerialized) return;
       if (trackLastSaved && lastSavedSerialized !== null && currentSerialized === lastSavedSerialized) {
         if (debug) console.log('[AutoSave] Skipping save - identical to last saved state');
         return;
       }
+      if (previousSerialized !== null && currentSerialized === previousSerialized) return;
       previousSerialized = currentSerialized;
     }
 
@@ -275,18 +275,18 @@ export function useAutoSaveForm(
     try {
       onBeforeSave?.();
 
-      blockWatcher(100);
+      blockWatcher(4000);
 
       Promise.resolve(onSave())
         .then(() => {
           onAfterSave?.();
           if (debug) console.log('[AutoSave] Save successful.');
-          blockWatcher(2000);
           setTimeout(() => {
             const currentAfterSave = getWatchedForm();
             updateLastSavedState(currentAfterSave);
             onSaveSuccess?.(currentAfterSave);
-          }, 500);
+            if (debug) console.log('[AutoSave] Tracked state updated.');
+          }, 1000);
         })
         .catch((err) => {
           onError?.(err);
