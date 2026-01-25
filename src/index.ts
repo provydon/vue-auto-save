@@ -7,6 +7,18 @@ export interface UseAutoSaveFormOptions {
   debounce?: number;
 
   /**
+   * Minimum time in milliseconds between saves (default: 0 - no limit)
+   * Prevents rapid successive saves even if data changes
+   */
+  minSaveInterval?: number;
+
+  /**
+   * Track last successfully saved state to prevent saving identical data (default: false)
+   * When enabled, only saves if current state differs from last saved state
+   */
+  trackLastSaved?: boolean;
+
+  /**
    * List of form field keys to exclude from tracking
    */
   skipFields?: string[];
@@ -57,8 +69,15 @@ export interface UseAutoSaveFormOptions {
 
   /**
    * Called after a successful auto-save
+   * If trackLastSaved is true, the form state at this point will be tracked as the last saved state
    */
   onAfterSave?: () => void;
+
+  /**
+   * Called when save completes successfully with the saved form data
+   * Use this to update the tracked last saved state with server response data
+   */
+  onSaveSuccess?: (savedData: Record<string, unknown>) => void;
 
   /**
    * Called if auto-saving throws or fails
@@ -103,6 +122,8 @@ export function useAutoSaveForm(
 ) {
   const {
     debounce = 3000,
+    minSaveInterval = 0,
+    trackLastSaved = false,
     skipFields = [],
     skipInertiaFields = true,
     deep = true,
@@ -113,6 +134,7 @@ export function useAutoSaveForm(
     onSave,
     onBeforeSave,
     onAfterSave,
+    onSaveSuccess,
     onError,
   } = options;
 
@@ -125,6 +147,13 @@ export function useAutoSaveForm(
    * Controls whether changes should trigger auto-save
    */
   const shouldWatch = ref(true);
+
+  /**
+   * Tracks the last successfully saved state (when trackLastSaved is enabled)
+   */
+  let lastSavedSerialized: string | null = null;
+  let lastSavedObj: Record<string, unknown> | null = null;
+  let lastSaveTime = 0;
 
   let cancelDebounce: () => void = () => {};
   let cancelTempDebounce: () => void = () => {};
@@ -185,33 +214,76 @@ export function useAutoSaveForm(
     ? (saveOnInit ? null : getWatchedForm())
     : null;
 
+  if (trackLastSaved && !saveOnInit) {
+    const initial = getWatchedForm();
+    if (compare) {
+      lastSavedObj = { ...initial };
+    } else {
+      lastSavedSerialized = serialize(initial);
+    }
+  }
+
+  /**
+   * Updates the last saved state tracking
+   */
+  const updateLastSavedState = (data: Record<string, unknown>) => {
+    if (trackLastSaved) {
+      if (compare) {
+        lastSavedObj = { ...data };
+      } else {
+        lastSavedSerialized = serialize(data);
+      }
+    }
+  };
+
   /**
    * Internal function that performs the actual save if values changed
    */
   const save = () => {
     if (!shouldWatch.value) return;
 
+    const now = Date.now();
+    if (minSaveInterval > 0 && now - lastSaveTime < minSaveInterval) {
+      if (debug) console.log('[AutoSave] Skipping save - too soon after last save');
+      return;
+    }
+
     const current = getWatchedForm();
 
     if (compare) {
       if (previousObj && compare(previousObj, current)) return;
+      if (trackLastSaved && lastSavedObj && compare(lastSavedObj, current)) {
+        if (debug) console.log('[AutoSave] Skipping save - identical to last saved state');
+        return;
+      }
       previousObj = current;
     } else {
       const currentSerialized = serialize(current);
       if (previousSerialized !== null && currentSerialized === previousSerialized) return;
+      if (trackLastSaved && lastSavedSerialized !== null && currentSerialized === lastSavedSerialized) {
+        if (debug) console.log('[AutoSave] Skipping save - identical to last saved state');
+        return;
+      }
       previousSerialized = currentSerialized;
     }
 
     if (debug) console.log('[AutoSave] Detected changes. Saving...');
     isAutoSaving.value = true;
+    lastSaveTime = now;
 
     try {
       onBeforeSave?.();
 
+      blockWatcher(100);
+
       Promise.resolve(onSave())
         .then(() => {
+          const currentAfterSave = getWatchedForm();
+          updateLastSavedState(currentAfterSave);
+          onSaveSuccess?.(currentAfterSave);
           onAfterSave?.();
           if (debug) console.log('[AutoSave] Save successful.');
+          blockWatcher(500);
         })
         .catch((err) => {
           onError?.(err);

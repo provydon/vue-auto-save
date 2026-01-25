@@ -68,6 +68,8 @@ const { isAutoSaving, blockWatcher, unblockWatcher, stop } = useAutoSaveForm(
 |--------|------|---------|-------------|
 | `onSave` | `() => void \| Promise<void>` | **Required** | Function called when auto-save should trigger |
 | `debounce` | `number` | `3000` | Delay in milliseconds before saving |
+| `minSaveInterval` | `number` | `0` | Minimum time in milliseconds between saves (prevents rapid successive saves) |
+| `trackLastSaved` | `boolean` | `false` | Track last successfully saved state to prevent saving identical data |
 | `skipFields` | `string[]` | `[]` | Field names to exclude from tracking |
 | `skipInertiaFields` | `boolean` | `true` | Skip common Inertia.js form helpers |
 | `deep` | `boolean` | `true` | Deep watch the form object |
@@ -77,6 +79,7 @@ const { isAutoSaving, blockWatcher, unblockWatcher, stop } = useAutoSaveForm(
 | `compare` | `(a, b) => boolean` | `undefined` | Custom comparison function |
 | `onBeforeSave` | `() => void` | `undefined` | Called before saving |
 | `onAfterSave` | `() => void` | `undefined` | Called after successful save |
+| `onSaveSuccess` | `(savedData) => void` | `undefined` | Called when save completes with saved form data (useful for updating tracked state with server response) |
 | `onError` | `(err) => void` | `undefined` | Called on save error |
 
 ### Return Values
@@ -151,6 +154,34 @@ blockWatcher(5000) // Block for 5 seconds
 blockWatcher()
 // ... do initialization work ...
 unblockWatcher() // Resume auto-save
+```
+
+### Prevent Infinite Loops with Server Updates
+
+```ts
+const { isAutoSaving } = useAutoSaveForm(form, {
+  onSave: async () => {
+    const response = await api.post('/save', form)
+    // Server response updates form data
+    Object.assign(form, response.data)
+  },
+  trackLastSaved: true, // Track last saved state
+  minSaveInterval: 3000, // Prevent saves within 3 seconds
+  onSaveSuccess: (savedData) => {
+    // Optionally update tracked state with server response
+    // This prevents the watcher from triggering on server updates
+  }
+})
+```
+
+### Minimum Save Interval
+
+```ts
+const { isAutoSaving } = useAutoSaveForm(form, {
+  onSave: saveToAPI,
+  minSaveInterval: 2000, // Prevent saves within 2 seconds of each other
+  debounce: 1000 // Still debounce user input for 1 second
+})
 ```
 
 ### With Ref Forms
