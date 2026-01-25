@@ -279,12 +279,14 @@ export function useAutoSaveForm(
 
       Promise.resolve(onSave())
         .then(() => {
-          const currentAfterSave = getWatchedForm();
-          updateLastSavedState(currentAfterSave);
-          onSaveSuccess?.(currentAfterSave);
           onAfterSave?.();
           if (debug) console.log('[AutoSave] Save successful.');
-          blockWatcher(500);
+          blockWatcher(2000);
+          setTimeout(() => {
+            const currentAfterSave = getWatchedForm();
+            updateLastSavedState(currentAfterSave);
+            onSaveSuccess?.(currentAfterSave);
+          }, 500);
         })
         .catch((err) => {
           onError?.(err);
