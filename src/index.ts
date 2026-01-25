@@ -254,6 +254,7 @@ export function useAutoSaveForm(
     if (compare) {
       if (trackLastSaved && lastSavedObj && compare(lastSavedObj, current)) {
         if (debug) console.log('[AutoSave] Skipping save - identical to last saved state');
+        previousObj = current;
         return;
       }
       if (previousObj && compare(previousObj, current)) return;
@@ -262,6 +263,7 @@ export function useAutoSaveForm(
       const currentSerialized = serialize(current);
       if (trackLastSaved && lastSavedSerialized !== null && currentSerialized === lastSavedSerialized) {
         if (debug) console.log('[AutoSave] Skipping save - identical to last saved state');
+        previousSerialized = currentSerialized;
         return;
       }
       if (previousSerialized !== null && currentSerialized === previousSerialized) return;
@@ -275,18 +277,27 @@ export function useAutoSaveForm(
     try {
       onBeforeSave?.();
 
-      blockWatcher(4000);
+      blockWatcher(5000);
 
       Promise.resolve(onSave())
         .then(async () => {
-          onAfterSave?.();
-          if (debug) console.log('[AutoSave] Save successful.');
           await nextTick();
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await nextTick();
           const currentAfterSave = getWatchedForm();
           updateLastSavedState(currentAfterSave);
           onSaveSuccess?.(currentAfterSave);
-          if (debug) console.log('[AutoSave] Tracked state updated.');
+          onAfterSave?.();
+          if (debug) {
+            console.log('[AutoSave] Save successful. Tracked state updated.');
+            console.log('[AutoSave] Current form:', currentAfterSave);
+            if (trackLastSaved) {
+              if (compare) {
+                console.log('[AutoSave] Last saved obj:', lastSavedObj);
+              } else {
+                console.log('[AutoSave] Last saved serialized:', lastSavedSerialized);
+              }
+            }
+          }
         })
         .catch((err) => {
           onError?.(err);
