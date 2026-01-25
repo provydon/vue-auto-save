@@ -68,8 +68,8 @@ const { isAutoSaving, blockWatcher, unblockWatcher, stop } = useAutoSaveForm(
 |--------|------|---------|-------------|
 | `onSave` | `() => void \| Promise<void>` | **Required** | Function called when auto-save should trigger |
 | `debounce` | `number` | `3000` | Delay in milliseconds before saving |
-| `minSaveInterval` | `number` | `0` | Minimum time in milliseconds between saves (prevents rapid successive saves) |
-| `trackLastSaved` | `boolean` | `false` | Track last successfully saved state to prevent saving identical data |
+| `minSaveInterval` | `number` | `2000` | Minimum time in milliseconds between saves (prevents rapid successive saves) |
+| `trackLastSaved` | `boolean` | `true` | Track last successfully saved state to prevent saving identical data (prevents infinite loops) |
 | `skipFields` | `string[]` | `[]` | Field names to exclude from tracking |
 | `skipInertiaFields` | `boolean` | `true` | Skip common Inertia.js form helpers |
 | `deep` | `boolean` | `true` | Deep watch the form object |
@@ -156,31 +156,25 @@ blockWatcher()
 unblockWatcher() // Resume auto-save
 ```
 
-### Prevent Infinite Loops with Server Updates
+### Prevent Infinite Loops with Server Updates (Default Behavior)
 
 ```ts
+// trackLastSaved and minSaveInterval are enabled by default
 const { isAutoSaving } = useAutoSaveForm(form, {
   onSave: async () => {
     const response = await api.post('/save', form)
-    // Server response updates form data
+    // Server response updates form data - no infinite loop!
     Object.assign(form, response.data)
-  },
-  trackLastSaved: true, // Track last saved state
-  minSaveInterval: 3000, // Prevent saves within 3 seconds
-  onSaveSuccess: (savedData) => {
-    // Optionally update tracked state with server response
-    // This prevents the watcher from triggering on server updates
   }
+  // trackLastSaved: true (default)
+  // minSaveInterval: 2000 (default)
 })
-```
 
-### Minimum Save Interval
-
-```ts
+// To disable these features if needed:
 const { isAutoSaving } = useAutoSaveForm(form, {
   onSave: saveToAPI,
-  minSaveInterval: 2000, // Prevent saves within 2 seconds of each other
-  debounce: 1000 // Still debounce user input for 1 second
+  trackLastSaved: false, // Disable if you want to save identical data
+  minSaveInterval: 0, // Disable minimum interval
 })
 ```
 

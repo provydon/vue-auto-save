@@ -7,14 +7,15 @@ export interface UseAutoSaveFormOptions {
   debounce?: number;
 
   /**
-   * Minimum time in milliseconds between saves (default: 0 - no limit)
+   * Minimum time in milliseconds between saves (default: 2000ms)
    * Prevents rapid successive saves even if data changes
    */
   minSaveInterval?: number;
 
   /**
-   * Track last successfully saved state to prevent saving identical data (default: false)
+   * Track last successfully saved state to prevent saving identical data (default: true)
    * When enabled, only saves if current state differs from last saved state
+   * Prevents infinite loops when server responses update form data
    */
   trackLastSaved?: boolean;
 
@@ -122,8 +123,8 @@ export function useAutoSaveForm(
 ) {
   const {
     debounce = 3000,
-    minSaveInterval = 0,
-    trackLastSaved = false,
+    minSaveInterval = 2000,
+    trackLastSaved = true,
     skipFields = [],
     skipInertiaFields = true,
     deep = true,
