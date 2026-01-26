@@ -62,6 +62,7 @@ describe('useAutoSaveForm', () => {
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnBeforeSave).toHaveBeenCalled();
@@ -225,30 +226,44 @@ describe('useAutoSaveForm', () => {
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(5000);
+    await vi.runAllTimersAsync();
+    await nextTick();
 
     form.user.profile.personal.details.preferences.theme = 'light';
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(2);
+
+    vi.advanceTimersByTime(5000);
+    await nextTick();
 
     form.user.settings.notifications.push = true;
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(3);
+
+    vi.advanceTimersByTime(5000);
+    await nextTick();
 
     form.metadata.permissions.admin = true;
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(4);
@@ -277,14 +292,20 @@ describe('useAutoSaveForm', () => {
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(5000);
+    await vi.runAllTimersAsync();
+    await nextTick();
 
     form.categories[0].products.push({ id: 2, name: 'Laptop', variants: [] });
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(2);
@@ -307,22 +328,32 @@ describe('useAutoSaveForm', () => {
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(5000);
+    await vi.runAllTimersAsync();
+    await nextTick();
 
     form.user.address.city = 'LA';
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(2);
+
+    vi.advanceTimersByTime(5000);
+    await nextTick();
 
     form.tags.push('composable');
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(3);
@@ -370,6 +401,7 @@ describe('useAutoSaveForm', () => {
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(consoleSpy).toHaveBeenCalledWith('[AutoSave] Detected changes. Saving...');
@@ -409,14 +441,20 @@ describe('useAutoSaveForm', () => {
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(5000);
+    await vi.runAllTimersAsync();
+    await nextTick();
 
     form.company.departments[0].teams[0].members[0].name = 'Alice Smith';
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(2);
@@ -449,14 +487,20 @@ describe('useAutoSaveForm', () => {
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(5000);
+    await vi.runAllTimersAsync();
+    await nextTick();
 
     form.projects[0].tasks[0].subtasks[0].assignee.name = 'Jane';
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(2);
@@ -479,14 +523,20 @@ describe('useAutoSaveForm', () => {
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(5000);
+    await vi.runAllTimersAsync();
+    await nextTick();
 
     delete form.user.profile.email;
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(2);
@@ -522,22 +572,32 @@ describe('useAutoSaveForm', () => {
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(5000);
+    await vi.runAllTimersAsync();
+    await nextTick();
 
     form.config.settings.features.notifications = true;
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(2);
+
+    vi.advanceTimersByTime(5000);
+    await nextTick();
 
     form.config.enabled = false;
     await nextTick();
 
     vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(3);
@@ -573,10 +633,11 @@ describe('useAutoSaveForm', () => {
     });
 
     unblockWatcher(null);
+    await vi.runAllTimersAsync();
     await nextTick();
 
     expect(mockOnSave).toHaveBeenCalledTimes(1);
-    expect(isAutoSaving.value).toBe(true);
+    expect(isAutoSaving.value).toBe(false);
   });
 
   it('should trigger immediate save when unblockWatcher is called with null after blocking', async () => {
@@ -601,6 +662,193 @@ describe('useAutoSaveForm', () => {
 
     expect(mockOnSave).toHaveBeenCalledTimes(1);
     expect(isAutoSaving.value).toBe(true);
+  });
+
+  it('should update previousSerialized when skipping due to lastSaved match', async () => {
+    const form = reactive({ name: 'John', email: 'john@example.com' });
+    const { isAutoSaving } = useAutoSaveForm(form, {
+      onSave: mockOnSave,
+      trackLastSaved: true,
+      debounce: 100
+    });
+
+    form.name = 'Jane';
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(5000);
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    form.email = 'jane@example.com';
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(2);
+
+    vi.advanceTimersByTime(5000);
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    form.name = 'Jane';
+    form.email = 'jane@example.com';
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(2);
+
+    form.name = 'Bob';
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(3);
+  });
+
+  it('should update previousObj when skipping due to lastSaved match with custom compare', async () => {
+    const form = reactive({ name: 'John', email: 'john@example.com' });
+    const compareFn = vi.fn((a, b) => JSON.stringify(a) === JSON.stringify(b));
+    
+    const { isAutoSaving } = useAutoSaveForm(form, {
+      onSave: mockOnSave,
+      trackLastSaved: true,
+      compare: compareFn,
+      debounce: 100
+    });
+
+    form.name = 'Jane';
+    form.email = 'jane@example.com';
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(5000);
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    form.name = 'Jane';
+    form.email = 'jane@example.com';
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(1);
+
+    form.name = 'Bob';
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    expect(mockOnSave).toHaveBeenCalledTimes(2);
+  });
+
+
+  it('should update tracked state after double nextTick', async () => {
+    const form = reactive({ name: 'John', count: 0 });
+    let savedData: Record<string, unknown> | null = null;
+    
+    const { isAutoSaving } = useAutoSaveForm(form, {
+      onSave: async () => {
+        form.count++;
+      },
+      onSaveSuccess: (data) => {
+        savedData = data;
+      },
+      trackLastSaved: true,
+      debounce: 100
+    });
+
+    form.name = 'Jane';
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    expect(savedData).not.toBeNull();
+    expect(savedData?.count).toBe(1);
+    expect(savedData?.name).toBe('Jane');
+
+    vi.advanceTimersByTime(5000);
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    form.name = 'Bob';
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    expect(savedData?.count).toBe(2);
+    expect(savedData?.name).toBe('Bob');
+  });
+
+  it('should not save identical data after server updates form', async () => {
+    const form = reactive({ name: 'John', email: 'john@example.com' });
+    const saveFn = vi.fn(async () => {
+      form.name = 'John Updated';
+      form.email = 'john.updated@example.com';
+    });
+    
+    const { isAutoSaving } = useAutoSaveForm(form, {
+      onSave: saveFn,
+      trackLastSaved: true,
+      debounce: 100
+    });
+
+    form.name = 'Jane';
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    expect(saveFn).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(5000);
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    form.name = 'John Updated';
+    form.email = 'john.updated@example.com';
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    expect(saveFn).toHaveBeenCalledTimes(1);
+
+    form.name = 'New Name';
+    await nextTick();
+
+    vi.advanceTimersByTime(100);
+    await vi.runAllTimersAsync();
+    await nextTick();
+
+    expect(saveFn).toHaveBeenCalledTimes(2);
   });
 
 }); 

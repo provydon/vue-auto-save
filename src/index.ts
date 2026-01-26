@@ -158,6 +158,7 @@ export function useAutoSaveForm(
 
   let cancelDebounce: () => void = () => {};
   let cancelTempDebounce: () => void = () => {};
+  let forceSave = false;
 
   /**
    * Temporarily blocks the watcher from triggering auto-save.
@@ -182,13 +183,14 @@ export function useAutoSaveForm(
     cancelTempDebounce();
 
     if (ms === null) {
-      const current = getWatchedForm();
+      forceSave = true;
       if (compare) {
         previousObj = null;
       } else {
         previousSerialized = null;
       }
       save();
+      forceSave = false;
     } else {
       const tempDebounced = debounceFn(save, ms);
       cancelTempDebounce = tempDebounced.cancel;
@@ -241,33 +243,41 @@ export function useAutoSaveForm(
    * Internal function that performs the actual save if values changed
    */
   const save = () => {
-    if (!shouldWatch.value) return;
+    if (!shouldWatch.value && !forceSave) return;
 
     const now = Date.now();
-    if (minSaveInterval > 0 && now - lastSaveTime < minSaveInterval) {
+    if (!forceSave && minSaveInterval > 0 && now - lastSaveTime < minSaveInterval) {
       if (debug) console.log('[AutoSave] Skipping save - too soon after last save');
       return;
     }
 
     const current = getWatchedForm();
 
-    if (compare) {
-      if (trackLastSaved && lastSavedObj && compare(lastSavedObj, current)) {
-        if (debug) console.log('[AutoSave] Skipping save - identical to last saved state');
+    if (!forceSave) {
+      if (compare) {
+        if (trackLastSaved && lastSavedObj && compare(lastSavedObj, current)) {
+          if (debug) console.log('[AutoSave] Skipping save - identical to last saved state');
+          previousObj = current;
+          return;
+        }
+        if (previousObj && compare(previousObj, current)) return;
         previousObj = current;
-        return;
-      }
-      if (previousObj && compare(previousObj, current)) return;
-      previousObj = current;
-    } else {
-      const currentSerialized = serialize(current);
-      if (trackLastSaved && lastSavedSerialized !== null && currentSerialized === lastSavedSerialized) {
-        if (debug) console.log('[AutoSave] Skipping save - identical to last saved state');
+      } else {
+        const currentSerialized = serialize(current);
+        if (trackLastSaved && lastSavedSerialized !== null && currentSerialized === lastSavedSerialized) {
+          if (debug) console.log('[AutoSave] Skipping save - identical to last saved state');
+          previousSerialized = currentSerialized;
+          return;
+        }
+        if (previousSerialized !== null && currentSerialized === previousSerialized) return;
         previousSerialized = currentSerialized;
-        return;
       }
-      if (previousSerialized !== null && currentSerialized === previousSerialized) return;
-      previousSerialized = currentSerialized;
+    } else {
+      if (compare) {
+        previousObj = current;
+      } else {
+        previousSerialized = serialize(current);
+      }
     }
 
     if (debug) console.log('[AutoSave] Detected changes. Saving...');
@@ -277,9 +287,7 @@ export function useAutoSaveForm(
     try {
       onBeforeSave?.();
 
-      blockWatcher(5000);
-
-      Promise.resolve(onSave())
+      const savePromise = Promise.resolve(onSave())
         .then(async () => {
           await nextTick();
           await nextTick();
@@ -288,15 +296,7 @@ export function useAutoSaveForm(
           onSaveSuccess?.(currentAfterSave);
           onAfterSave?.();
           if (debug) {
-            console.log('[AutoSave] Save successful. Tracked state updated.');
-            console.log('[AutoSave] Current form:', currentAfterSave);
-            if (trackLastSaved) {
-              if (compare) {
-                console.log('[AutoSave] Last saved obj:', lastSavedObj);
-              } else {
-                console.log('[AutoSave] Last saved serialized:', lastSavedSerialized);
-              }
-            }
+            console.log('[AutoSave] Save successful.');
           }
         })
         .catch((err) => {
@@ -306,6 +306,12 @@ export function useAutoSaveForm(
         .finally(() => {
           isAutoSaving.value = false;
         });
+
+      if (!forceSave) {
+        blockWatcher(5000);
+      }
+
+      return savePromise;
     } catch (err) {
       onError?.(err);
       if (debug) console.error('[AutoSave] Immediate error:', err);
