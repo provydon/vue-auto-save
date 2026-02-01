@@ -1,4 +1,4 @@
-import { ref, watch, isRef, unref, onScopeDispose, nextTick, type Ref } from 'vue';
+import { ref, watch, isRef, unref, onScopeDispose, nextTick, computed, type Ref } from 'vue';
 
 export interface UseAutoSaveFormOptions {
   /**
@@ -212,6 +212,7 @@ export function useAutoSaveForm(
     return data;
   };
 
+
   let previousSerialized: string | null = saveOnInit ? null : serialize(getWatchedForm());
   let previousObj: Record<string, unknown> | null = compare
     ? (saveOnInit ? null : getWatchedForm())
@@ -326,11 +327,23 @@ export function useAutoSaveForm(
   const debouncedSave = debounced.call;
   cancelDebounce = debounced.cancel;
 
+  // Use a getter function to ensure Vue properly tracks deeply nested changes
+  // This is critical for refs created with toRef() which may not properly proxy deep reactivity
+  // By using a getter function that accesses the form value, Vue's reactivity system will
+  // track all nested property accesses when combined with deep: true
   const stop = watch(
-    form,
+    () => {
+      // Access the form value through a getter function
+      // This ensures Vue's reactivity system tracks all nested property accesses
+      // When deep: true is used, Vue will traverse and track all nested properties
+      const formValue = isRef(form) ? unref(form) : form;
+      // Return the form value - with deep: true, Vue will track all nested properties
+      // even in deeply nested structures like formData.assets_to_be_financed[0].assets[0].unit_price
+      return formValue;
+    },
     debouncedSave,
     {
-      deep,
+      deep: true, // Always use deep watching to track nested changes in deeply nested JSONs
       flush: 'post',
     }
   );
